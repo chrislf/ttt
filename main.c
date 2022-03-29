@@ -15,6 +15,7 @@ of 800x480 binary pixels
 // conversion when we're actually on the MCU
 #include "log.h"
 
+#include <stdint.h>
 
 /*===========================================================================
 
@@ -33,8 +34,14 @@ of 800x480 binary pixels
   with an error message, that the caller should eventually free.
 
   =========================================================================*/
-BOOL init_ft (const char *ttf_file, FT_Face *face, FT_Library *ft, 
-               int req_size, char **error)
+//BOOL init_ft (const char *ttf_file, FT_Face *face, FT_Library *ft, 
+//               int req_size, char **error)
+BOOL init_ft (FT_Face *face, FT_Library *ft, 
+               int req_size, char **error,
+               const FT_Byte* file_base,
+               FT_Long file_size
+
+               )
   {
   LOG_IN
   BOOL ret = FALSE;
@@ -42,7 +49,7 @@ BOOL init_ft (const char *ttf_file, FT_Face *face, FT_Library *ft,
   if (FT_Init_FreeType (ft) == 0) 
     {
     log_info ("Initialized FreeType");
-    if (FT_New_Face(*ft, ttf_file, 0, face) == 0)
+    if (FT_New_Memory_Face(*ft, file_base, file_size, 0, face) == 0)
       {
       log_info ("Loaded TTF file");
       // Note -- req_size is a request, not an instruction
@@ -60,7 +67,7 @@ BOOL init_ft (const char *ttf_file, FT_Face *face, FT_Library *ft,
       }
     else
       {
-      log_error ("Can't load TTF file %s", ttf_file);
+      log_error ("Can't load TTF font %s");
       if (error)
         *error = strdup ("Can't load TTF file");
       }
@@ -418,7 +425,8 @@ int main (int argc, char **argv)
 
   log_set_level (log_level);
 
-  char *ttf_file = "font.ttf";
+  //char *ttf_file = "/usr/share/fonts/truetype/liberation2/LiberationSerif-Bold.ttf";
+  //char *ttf_file = "/usr/share/fonts/truetype/liberation2/LiberationMono-Regular.ttf";
 
   char *error = NULL;
 
@@ -429,7 +437,12 @@ int main (int argc, char **argv)
   //  size.
   FT_Face face;
   FT_Library ft;
-  if (init_ft (ttf_file, &face, &ft, font_size, &error))
+
+  extern uint32_t liberation_serif_regular_size;
+  extern uint8_t liberation_serif_regular_data[389764];
+
+  //if (init_ft (ttf_file, &face, &ft, font_size, &error))
+  if (init_ft (&face, &ft, font_size, &error, (FT_Byte*)liberation_serif_regular_data, liberation_serif_regular_size))
     {
     log_debug ("Font face initialized OK");
 
